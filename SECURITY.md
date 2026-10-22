@@ -30,6 +30,20 @@ Gladys before reporting a problem.
 
 In scope: the code of this repository and the Docker image it publishes.
 
+What the integration keeps and sends:
+
+- Its configuration (the wger address and the API key of the account) is
+  stored by Gladys and handed to the container. The key is only sent to the
+  configured wger server, in the `Authorization` header, and never written to
+  the logs, nor any weight, workout or calorie value.
+- `/data/wger-state.json` holds the state of the scene triggers: a digest of
+  the server and user name, the date of the last weigh-in and of the last
+  workout, and which "no workout" thresholds were announced. No weight.
+- Network: requests to the configured wger server only (GET, and a POST of a
+  weigh-in when a scene asks for it). Redirects are not followed, so the key
+  never goes elsewhere.
+
 Out of scope: Gladys Assistant itself (see its
 [security policy](https://github.com/GladysAssistant/Gladys/security/policy)),
-and the third-party services and devices the integration talks to.
+and wger itself (see the
+[wger project](https://github.com/wger-project/wger)).

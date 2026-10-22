@@ -1,0 +1,20 @@
+{
+  "count": 1,
+  "next": null,
+  "previous": null,
+  "results": [
+    {
+      "id": "01a16347-1617-7038-b83e-06b6b1dc5648",
+      "creation_date": "2026-10-22",
+      "start": "2026-10-22",
+      "end": null,
+      "description": "Maintien",
+      "only_logging": false,
+      "goal_energy": 2400,
+      "goal_protein": null,
+      "goal_carbohydrates": null,
+      "goal_fat": null,
+      "goal_fiber": null
+    }
+  ]
+}

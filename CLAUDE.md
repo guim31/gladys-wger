@@ -31,16 +31,21 @@ pushing.
 ## Architecture
 
 ```
-index.js                          SDK wiring only: handlers registered before connect()
-src/devices/index.js              registry of the device blueprints + dispatch helpers
-src/devices/<type>.js             one device type per file (buildDevice, onPoll, onSetValue...)
-src/scenes.js                     scene action handlers (manifest `scene_actions`)
-src/widgets.js                    dashboard widget handlers (manifest `widgets`)
+index.js                          SDK wiring only (src/app.js registers the handlers)
+src/app.js                        every SDK handler, wired to the hub (tests use the same wiring)
+src/hub.js                        reading timer, states, scene events, connection status, transports
+src/wger/client.js                the wger REST API v2 (fetch seam for the tests)
+src/devices.js                    the account device: features, names in 4 languages, values
+src/stats.js                      weight changes, BMI, week, days, parsing and formatting
+src/scenes.js                     scene actions: add_weight, get_week_summary
+src/widgets.js                    dashboard widget `summary`
+src/texts.js                      messages in 4 languages
+src/store.js, src/problems.js     /data persistence (trigger state), log-once helper
 src/config.js                     DEFAULT_CONFIG (mirrors the manifest defaults) + normalization
-src/weather.js                    example driver (Open-Meteo)
-gladys-assistant-integration.json manifest: name, config_schema, actions, image...
-docs/en.md, docs/fr.md            user documentation, re-hosted by Gladys (mandatory)
-test/                             node --test, against the SDK's fake Gladys (integration-sdk/testing)
+gladys-assistant-integration.json manifest: name, config_schema, triggers, actions, widget...
+docs/{en,fr,de,es}.md             user documentation, re-hosted by Gladys (same sections)
+test/                             node --test, against the SDK's fake Gladys and a fake wger
+test/fixtures/wger                real answers of wger 2.8.0-dev (Docker image wger/server)
 .github/scripts/release.mjs       release helpers (manifest bump, changelog), tested in test/
 ```
 
@@ -70,8 +75,9 @@ test/                             node --test, against the SDK's fake Gladys (in
   `type: "provider"`: 5.1.0). `test/manifest.test.js` ties the manifest to the
   code (defaults, action, scene and widget handlers): change both sides
   together.
-- **User-facing text** is bilingual (English and French): action messages,
-  manifest texts, and `docs/en.md` / `docs/fr.md`, kept in sync.
+- **User-facing text** is in English, French, German and Spanish: action
+  messages, manifest texts, widget texts, feature names, and
+  `docs/{en,fr,de,es}.md`, kept in sync (`test/i18n.test.js`).
 - **Style.** Prettier formats, ESLint catches mistakes. Comments explain why,
   in English. Tests never touch the network.
 
@@ -233,3 +239,32 @@ long, et sur un « Sie »/« Ihr… » de politesse en allemand. Le store exige 
 - Docs `en`, `fr`, `de`, `es` avec les mêmes sections.
 - Chauffe, ouverture, sécurité : ne rien rendre pilotable « comme un thermostat » ou par un assistant
   vocal quand une erreur serait dangereuse (leçon d'OctoPrint).
+
+## wger (notes de cette intégration, 22/10/2026)
+
+- **Version** : wger.de tourne sur la même version que l'image `wger/server:latest` (2.8.0-dev le
+  22/10/2026, `GET /api/v2/version/`). Banc de test : `wger/server` + `postgres:15-alpine` +
+  `redis:alpine`, variables `DJANGO_DB_*`, `DJANGO_CACHE_*`, `DJANGO_PERFORM_MIGRATIONS=True`,
+  `SITE_URL` obligatoire ; utilisateur et jeton créés par `python3 manage.py shell` (modèle
+  `rest_framework.authtoken`). La base n'a ni exercice ni aliment : un aliment se crée au shell
+  (`wger.nutrition.models.Ingredient`) pour tester le journal.
+- **Auth** : `Authorization: Token <clé>` ; clé fausse ou absente → **403** (pas 401).
+- **Formats** : `weightentry.date` est une **date-heure** avec fuseau depuis 2.6 (une date seule
+  avant) ; `weight` est une chaîne décimale, dans l'unité du profil (`userprofile.weight_unit`,
+  `kg`/`lb`), sans conversion par wger. Les `id` de pesée, de séance et de journal sont des
+  **UUID** (chaînes) ; celui de routine un entier. `workoutsession` a `datetime_start` /
+  `datetime_end` (plus de `date` depuis les routines de 2.3), `notes`, `routine`.
+  `userprofile` est un objet (pas une liste), sans `id` : l'appareil est identifié par un condensé
+  du serveur et du `username`.
+- **Écriture** : `POST /weightentry/` refuse en 400 un poids hors **20–350 kg**
+  (`{"weight": [...]}`), accepte sans date (maintenant) et **accepte deux pesées au même
+  instant** : le dédoublonnage est de notre côté.
+- **Calories** : aucune route ne donne le total du jour ; `nutritiondiary` se filtre par
+  `datetime__gte`/`datetime__lt` (ISO avec fuseau), puis `nutritiondiary/<id>/nutritional_values/`
+  donne `energy` par entrée (mise en cache par id + aliment + quantité).
+  `nutritionplan/<id>/nutritional_values/` donne les valeurs **prévues** du plan (0 sans repas).
+- **Quotas** : seuls `login` (10/min) et les aliments (120/min) sont limités sur wger.de ; ~5 requêtes
+  par lecture, toutes les 30 min par défaut.
+- **Pas de boucle** (règle du SDK) : une pesée ajoutée par l'action `add_weight` ne déclenche pas
+  `weight_added` (`hub.markWeightSeen`) ; l'action donne ses propres sorties. Les `add_weight`
+  passent un par un (`hub.exclusive`) : une balance déclenche souvent deux fois de suite.

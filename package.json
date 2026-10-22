@@ -1,8 +1,8 @@
 {
-  "name": "gladys-integration-template-js",
+  "name": "gladys-wger",
   "version": "1.0.0",
   "private": true,
-  "description": "Official starter template to build an external integration for Gladys Assistant with the JavaScript SDK.",
+  "description": "wger (workout and weight tracker) in Gladys Assistant: weight and trend, workouts, calories, weigh-ins from scenes.",
   "type": "module",
   "main": "index.js",
   "scripts": {
@@ -10,7 +10,7 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test": "node --test"
+    "test": "TZ=Europe/Paris node --test"
   },
   "engines": {
     "node": ">=22"
