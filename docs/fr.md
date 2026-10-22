@@ -47,7 +47,7 @@ Le widget **Poids et séances** affiche le poids et sa variation sur 7 jours, le
 
 ## Déclencheurs de scène
 
-- **Nouvelle pesée** : une pesée plus récente que la dernière connue apparaît dans wger (appli, site, balance, ou l'action de scène ci-dessous). Informations transmises : poids, unité, variation sur 7 jours, IMC, date.
+- **Nouvelle pesée** : une pesée plus récente que la dernière connue apparaît dans wger (appli, site, autre outil ; pas les pesées ajoutées par l'action de scène ci-dessous, qui donne ses propres résultats). Informations transmises : poids, unité, variation sur 7 jours, IMC, date.
 - **Séance enregistrée** : une séance plus récente que la dernière connue apparaît dans wger. Informations transmises : notes ou routine, date, durée, séances cette semaine.
 - **Aucune séance depuis un moment** : aucune séance depuis 2, 3, 5, 7 ou 14 jours (au choix). Une fois par seuil, jusqu'à la séance suivante. Informations transmises : jours depuis la dernière séance, sa date.
 

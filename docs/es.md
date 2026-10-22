@@ -47,7 +47,7 @@ El widget **Peso y sesiones** muestra el peso y su variación en 7 días, las se
 
 ## Disparadores de escena
 
-- **Nuevo pesaje**: aparece en wger un pesaje más reciente que el último conocido (app, web, báscula, o la acción de escena de abajo). Información transmitida: peso, unidad, variación en 7 días, IMC, fecha.
+- **Nuevo pesaje**: aparece en wger un pesaje más reciente que el último conocido (app, web, otra herramienta; no los pesajes añadidos por la acción de escena de abajo, que da sus propios resultados). Información transmitida: peso, unidad, variación en 7 días, IMC, fecha.
 - **Sesión registrada**: aparece en wger una sesión más reciente que la última conocida. Información transmitida: notas o rutina, fecha, duración, sesiones esta semana.
 - **Ninguna sesión desde hace tiempo**: ninguna sesión desde hace 2, 3, 5, 7 o 14 días (a elegir). Una vez por umbral, hasta la siguiente sesión. Información transmitida: días desde la última sesión, su fecha.
 

@@ -14,7 +14,7 @@ import { TRIGGERS, WIDGET_KEY } from '../src/hub.js';
 import { DAY_MS } from '../src/stats.js';
 import { WEIGHT_TEXT } from '../src/texts.js';
 import { ACTIONS } from '../src/widgets.js';
-import { API_KEY, BASE, createDevices, createWorld, idsOf } from './helpers/world.js';
+import { API_KEY, BASE, FakeWger, createDevices, createWorld, idsOf } from './helpers/world.js';
 
 const iso = (time) => new Date(time).toISOString();
 
@@ -142,6 +142,51 @@ test('"no workout" fires once per threshold, survives a restart, resets on a wor
   );
 });
 
+test('a workout logged days late announces no silence it already ended', async (t) => {
+  const world = await createWorld();
+  t.after(() => world.app.stop());
+  world.clock.advance(6 * DAY_MS);
+  await world.hub.pollNow();
+  assert.deepEqual(
+    world.fake.sceneEvents.map((e) => e.data.days),
+    ['2', '3', '5'],
+  );
+  // A forgotten workout of 4 days ago: logged, and no "2 days" or "3 days" again.
+  world.wger.addSession(iso(world.clock.now() - 4 * DAY_MS), { notes: 'Bike' });
+  await world.hub.pollNow();
+  assert.deepEqual(
+    world.fake.sceneEvents.slice(3).map((e) => e.key),
+    [TRIGGERS.WORKOUT_LOGGED],
+  );
+});
+
+test('two runs of the same weigh-in at once add it once', async (t) => {
+  const world = await createWorld();
+  t.after(() => world.app.stop());
+  const acks = await Promise.all([
+    world.fake.sceneAction('add_weight', { weight: '79.4' }),
+    world.fake.sceneAction('add_weight', { weight: '79.4' }),
+  ]);
+  assert.deepEqual(
+    acks.map((ack) => ack.data.outputs.added),
+    [true, false],
+  );
+  assert.equal(world.wger.posted.length, 1);
+});
+
+test('the widget shows no made-up zero when wger was never read', async (t) => {
+  const wger = new FakeWger();
+  wger.down = true;
+  const world = await createWorld({ wger });
+  t.after(() => world.app.stop());
+  const content = (await world.fake.widgetGet(WIDGET_KEY, { settings: {}, language: 'en' })).data
+    .content;
+  assert.deepEqual(
+    content.components.map((c) => c.type),
+    ['text', 'button'],
+  );
+});
+
 test('a first reading long after the last workout announces nothing', async (t) => {
   const world = await createWorld({ connect: false });
   t.after(() => world.app.stop());
@@ -168,7 +213,10 @@ test('add a weigh-in from a scene: comma, today, read again at once', async (t) 
   });
   assert.equal(world.wger.posted.length, 1);
   assert.equal(world.wger.posted[0].weight, '79.50');
-  assert.equal(world.fake.sceneEvents.at(-1).key, TRIGGERS.WEIGHT_ADDED);
+  // No scene event for a weigh-in the scene itself added (no loops).
+  assert.deepEqual(world.fake.sceneEvents, []);
+  await world.hub.pollNow();
+  assert.deepEqual(world.fake.sceneEvents, []);
 
   // The same scene run twice: not added again.
   const again = await world.fake.sceneAction('add_weight', { weight: '79.5' });

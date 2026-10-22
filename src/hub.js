@@ -120,6 +120,7 @@ export class WgerHub {
     this.lastRoutine = '';
     this.plans = [];
     this.calories = null;
+    this.caloriesDay = null;
     /** @type {Map<string, number>} energy of the diary entries of today, by entry key */
     this.energies = new Map();
     this.readAt = 0;
@@ -246,7 +247,9 @@ export class WgerHub {
       return client === this.client && this.applyFailure(err);
     }
     // Optional: an account without nutrition plan has no calories.
-    let { plans, calories } = this;
+    let { plans } = this;
+    // Kept on a failure, but never yesterday's.
+    let calories = this.caloriesDay === startOfDay(this.now()) ? this.calories : null;
     try {
       plans = await client.plans();
       calories = plans.length > 0 ? await this.readCalories(client) : null;
@@ -293,6 +296,7 @@ export class WgerHub {
     this.lastRoutine = lastRoutine;
     this.plans = plans;
     this.calories = calories;
+    this.caloriesDay = startOfDay(this.now());
     if (this.saved.account !== this.accountId) {
       // Another account: the trigger state of the previous one means nothing.
       this.saved = { account: this.accountId, state: emptyState() };
@@ -390,9 +394,10 @@ export class WgerHub {
           events.push([TRIGGERS.WORKOUT_LOGGED, this.workoutData(session)]);
         }
         state.lastSessionStart = session.start;
-        // A new silence starts; on a first reading, the thresholds already
-        // passed are not announced.
-        state.noWorkout = first ? this.passedThresholds(session.start, now) : [];
+        // A new silence starts from that workout; the thresholds it has
+        // already passed (a first reading, a workout logged days later) are
+        // not announced.
+        state.noWorkout = this.passedThresholds(session.start, now);
       }
     }
     if (state.lastSessionStart !== null) {
@@ -420,6 +425,32 @@ export class WgerHub {
     for (const [key, data] of events) {
       await this.fire(key, data);
     }
+  }
+
+  /**
+   * A weigh-in added by the scene action is not announced as a new one: a
+   * scene event never follows an action received from Gladys (the "no loops"
+   * rule of the SDK).
+   */
+  markWeightSeen(date) {
+    const state = this.saved.state;
+    if (state.initialized && (state.lastWeightDate === null || date > state.lastWeightDate)) {
+      this.saved = { account: this.accountId, state: { ...state, lastWeightDate: date } };
+      this.store.save(this.saved);
+    }
+  }
+
+  /** A read that starts after the call (not one already in progress). */
+  async readAgain() {
+    await this.polling?.catch(() => {});
+    await this.pollNow();
+  }
+
+  /** Runs `fn` after the previous exclusive task (scene actions that write). */
+  exclusive(fn) {
+    const run = (this.queue ?? Promise.resolve()).then(fn);
+    this.queue = run.catch(() => {});
+    return run;
   }
 
   passedThresholds(start, now) {

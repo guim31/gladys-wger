@@ -25,7 +25,7 @@ import {
   parseWeight,
   startOfDay,
 } from './stats.js';
-import { DATA_TEXT, SUMMARY_TEXT, WEIGHT_TEXT, pick } from './texts.js';
+import { DATA_TEXT, ERROR_TEXT, SUMMARY_TEXT, WEIGHT_TEXT, pick } from './texts.js';
 
 const logger = createLogger({ name: 'wger-scenes' });
 
@@ -66,58 +66,77 @@ export function summarySentence(hub, language) {
   return parts.join(' · ');
 }
 
-export const SCENE_ACTIONS = {
-  async add_weight(hub, { fields = {} }) {
-    const language = hub.config.language;
-    const fail = (text) => {
-      throw new Error(pick(text, language));
-    };
-    await readable(hub);
-    const unit = hub.unit;
-    const weight = parseWeight(fields.weight);
-    if (weight === null) {
-      fail(WEIGHT_TEXT.notNumber);
-    }
-    const [min, max] = WEIGHT_LIMITS[unit];
-    if (weight < min || weight > max) {
-      fail(WEIGHT_TEXT.outOfRange);
-    }
-    const now = hub.now();
-    const date = parseDay(fields.date, now);
-    if (date === null) {
-      fail(WEIGHT_TEXT.badDate);
-    }
-    if (date > now + 3600_000) {
-      fail(WEIGHT_TEXT.future);
-    }
-    const recent = hub.weights.find(
-      (entry) => entry.date <= date && entry.date >= date - 30 * DAY_MS,
-    );
-    if (
-      fields.check_change !== false &&
-      recent &&
-      Math.abs(weight - recent.weight) > recent.weight * MAX_CHANGE
-    ) {
-      fail(WEIGHT_TEXT.tooFar);
-    }
-    const duplicate = hub.weights.some(
+async function addWeight(hub, { fields = {} }) {
+  const language = hub.config.language;
+  const fail = (text) => {
+    throw new Error(pick(text, language));
+  };
+  await readable(hub);
+  const unit = hub.unit;
+  const weight = parseWeight(fields.weight, unit);
+  if (weight === null) {
+    fail(WEIGHT_TEXT.notNumber);
+  }
+  const [min, max] = WEIGHT_LIMITS[unit];
+  if (weight < min || weight > max) {
+    fail(WEIGHT_TEXT.outOfRange);
+  }
+  const now = hub.now();
+  const date = parseDay(fields.date, now);
+  if (date === null) {
+    fail(WEIGHT_TEXT.badDate);
+  }
+  if (startOfDay(date) > startOfDay(now)) {
+    fail(WEIGHT_TEXT.future);
+  }
+  const recent = hub.weights.find(
+    (entry) => entry.date <= date && entry.date >= date - 30 * DAY_MS,
+  );
+  if (
+    fields.check_change !== false &&
+    recent &&
+    Math.abs(weight - recent.weight) > recent.weight * MAX_CHANGE
+  ) {
+    fail(WEIGHT_TEXT.tooFar);
+  }
+  // Also the last one added, should wger not have been read again since.
+  const duplicate =
+    hub.weights.some(
       (entry) => entry.weight === weight && startOfDay(entry.date) === startOfDay(date),
-    );
-    if (!duplicate) {
-      await hub.client.addWeight(weight, date);
-      // One line per action of the user, without the value (health data).
-      logger.info('Weigh-in added to wger');
-      await hub.pollNow();
+    ) ||
+    (hub.lastAdded?.weight === weight && hub.lastAdded.day === startOfDay(date));
+  if (!duplicate) {
+    let added;
+    try {
+      added = await hub.client.addWeight(weight, date);
+    } catch (err) {
+      if (err.fields?.weight) {
+        fail(WEIGHT_TEXT.outOfRange); // wger's own bounds
+      }
+      throw err.kind ? new Error(pick(ERROR_TEXT[err.kind], language)) : err;
     }
-    const view = hub.view();
-    return {
-      added: !duplicate,
-      weight,
-      unit,
-      date: isoDay(date),
-      change_7d: view.change7 ?? 0,
-      message: pick(duplicate ? WEIGHT_TEXT.duplicate : WEIGHT_TEXT.added, language),
-    };
+    // One line per action of the user, without the value (health data).
+    logger.info('Weigh-in added to wger');
+    hub.lastAdded = { weight, day: startOfDay(date) };
+    hub.markWeightSeen(added?.date ?? date);
+    await hub.readAgain();
+  }
+  const view = hub.view();
+  return {
+    added: !duplicate,
+    weight,
+    unit,
+    date: isoDay(date),
+    change_7d: view.change7 ?? 0,
+    message: pick(duplicate ? WEIGHT_TEXT.duplicate : WEIGHT_TEXT.added, language),
+  };
+}
+
+export const SCENE_ACTIONS = {
+  add_weight(hub, options) {
+    // One at a time: a scale often fires twice within a second, and wger
+    // accepts two identical weigh-ins.
+    return hub.exclusive(() => addWeight(hub, options));
   },
 
   async get_week_summary(hub) {

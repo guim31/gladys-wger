@@ -265,3 +265,6 @@ long, et sur un « Sie »/« Ihr… » de politesse en allemand. Le store exige 
   `nutritionplan/<id>/nutritional_values/` donne les valeurs **prévues** du plan (0 sans repas).
 - **Quotas** : seuls `login` (10/min) et les aliments (120/min) sont limités sur wger.de ; ~5 requêtes
   par lecture, toutes les 30 min par défaut.
+- **Pas de boucle** (règle du SDK) : une pesée ajoutée par l'action `add_weight` ne déclenche pas
+  `weight_added` (`hub.markWeightSeen`) ; l'action donne ses propres sorties. Les `add_weight`
+  passent un par un (`hub.exclusive`) : une balance déclenche souvent deux fois de suite.

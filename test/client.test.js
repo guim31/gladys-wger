@@ -112,13 +112,18 @@ test('the address: wger.de by default, pages of the interface, local servers', (
 test('weights, days and changes', () => {
   assert.equal(parseWeight('79,8'), 79.8);
   assert.equal(parseWeight(' 80.25 kg'), 80.25);
-  assert.equal(parseWeight('176 lbs'), 176);
+  assert.equal(parseWeight('176 lbs', 'lb'), 176);
+  // A unit that is not the one of the profile is never converted: refused.
+  assert.equal(parseWeight('176 lb', 'kg'), null);
   assert.equal(parseWeight('-3'), null);
   assert.equal(parseWeight('1e3'), null);
   const now = Date.parse('2026-10-22T12:00:00+02:00');
   assert.equal(parseDay('', now), now);
   assert.equal(parseDay('2026-02-30', now), null);
   assert.equal(new Date(parseDay('2026-10-20', now)).getHours(), 12);
+  // Today, typed: now, not noon (a morning weigh-in is not in the future).
+  const morning = Date.parse('2026-10-22T08:00:00+02:00');
+  assert.equal(parseDay('2026-10-22', morning), morning);
   assert.equal(bmiOf(176, 'lb', 178), 25.2);
   assert.equal(bmiOf(80, 'kg', null), null);
   // Monday 19 October 2026, local midnight.
@@ -131,4 +136,12 @@ test('weights, days and changes', () => {
   // The only older weigh-in is 40 days old: no change over 7 days.
   assert.equal(weightChange(weights, 7), null);
   assert.equal(weightChange(weights, 30), -2);
+  // Calendar days across the start of DST (28 March 2027): 1 April 00:30
+  // against 25 March, not 24.
+  const dst = [
+    { date: Date.parse('2027-04-01T00:30:00+02:00'), weight: 80 },
+    { date: Date.parse('2027-03-25T07:00:00+01:00'), weight: 81 },
+    { date: Date.parse('2027-03-24T07:00:00+01:00'), weight: 82 },
+  ];
+  assert.equal(weightChange(dst, 7), -1);
 });

@@ -47,7 +47,7 @@ The **Weight and workouts** widget shows the weight and its change over 7 days, 
 
 ## Scene triggers
 
-- **New weigh-in**: a weigh-in newer than the last one known appears in wger (app, website, scale, or the scene action below). Information passed on: weight, unit, change over 7 days, BMI, date.
+- **New weigh-in**: a weigh-in newer than the last one known appears in wger (app, website, another tool; not the weigh-ins added by the scene action below, which gives its own results). Information passed on: weight, unit, change over 7 days, BMI, date.
 - **Workout logged**: a workout session newer than the last one known appears in wger. Information passed on: notes or routine, date, duration, workouts this week.
 - **No workout for a while**: no workout for 2, 3, 5, 7 or 14 days (your choice). Once per threshold, until the next workout. Information passed on: days since the last workout, its date.
 

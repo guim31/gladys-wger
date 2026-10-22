@@ -72,7 +72,8 @@ async function get(hub, { language = 'en' }) {
       });
     }
   }
-  if (hub.readAt) {
+  // Read once at least: a failed first read shows no made-up zero.
+  if (hub.profile) {
     components.push({
       type: 'value',
       value: String(view.workoutsWeek ?? 0),
@@ -121,7 +122,7 @@ async function get(hub, { language = 'en' }) {
   let body = null;
   if (hub.error) {
     body = ERROR_TEXT[hub.error.kind];
-  } else if (hub.readAt && view.weight === null) {
+  } else if (hub.profile && view.weight === null) {
     body = DATA_TEXT.noWeight;
   }
   if (body) {

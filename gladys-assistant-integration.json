@@ -206,10 +206,10 @@
         "es": "Nuevo pesaje"
       },
       "description": {
-        "en": "A weigh-in newer than the last one known appears in wger (app, website, scale or a scene). Seen at the next reading.",
-        "fr": "Une pesée plus récente que la dernière connue apparaît dans wger (appli, site, balance ou scène). Vue à la lecture suivante.",
-        "de": "Eine neuere Wägung als die letzte bekannte erscheint in wger (App, Website, Waage oder Szene). Bei der nächsten Abfrage erkannt.",
-        "es": "Aparece en wger un pesaje más reciente que el último conocido (app, web, báscula o escena). Detectado en la siguiente lectura."
+        "en": "A weigh-in newer than the last one known appears in wger (app, website, another tool). Seen at the next reading.",
+        "fr": "Une pesée plus récente que la dernière connue apparaît dans wger (appli, site, autre outil). Vue à la lecture suivante.",
+        "de": "Eine neuere Wägung als die letzte bekannte erscheint in wger (App, Website, anderes Werkzeug). Bei der nächsten Abfrage erkannt.",
+        "es": "Aparece en wger un pesaje más reciente que el último conocido (app, web, otra herramienta). Detectado en la siguiente lectura."
       },
       "fields": [
         {

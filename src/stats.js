@@ -32,6 +32,12 @@ export function nextDay(time) {
   return new Date(date.getFullYear(), date.getMonth(), date.getDate() + 1).getTime();
 }
 
+/** Local midnight `days` calendar days before the day of `time` (DST-safe). */
+export function daysBefore(time, days) {
+  const date = new Date(time);
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate() - days).getTime();
+}
+
 /** Calendar days from `from` to `to` (0 the same day), whatever the DST. */
 export const daysBetween = (from, to) =>
   Math.max(0, Math.round((startOfDay(to) - startOfDay(from)) / DAY_MS));
@@ -49,9 +55,9 @@ export function weightChange(weights, days) {
   if (!latest) {
     return null;
   }
-  const limit = nextDay(latest.date - days * DAY_MS);
+  const limit = daysBefore(latest.date, days - 1);
   const baseline = weights.find((entry) => entry.date < limit);
-  if (!baseline || baseline.date < latest.date - 2 * days * DAY_MS) {
+  if (!baseline || baseline.date < daysBefore(latest.date, 2 * days)) {
     return null;
   }
   return round1(latest.weight - baseline.weight);
@@ -77,24 +83,29 @@ export const workoutsThisWeek = (sessions, now) => {
 export const WEIGHT_LIMITS = Object.freeze({ kg: [20, 350], lb: [44, 770] });
 
 /**
- * A weight typed or passed by a scene: "79,8", "79.8 kg", 79.8.
+ * A weight typed or passed by a scene: "79,8", "79.8 kg", 79.8. A unit
+ * written in the value must be the one of the profile (never converted).
+ * @param {unknown} raw
+ * @param {'kg'|'lb'} [unit] the unit of the profile
  * @returns {number|null} rounded to 0.01, null when not a number
  */
-export function parseWeight(raw) {
-  const text = String(raw ?? '')
-    .trim()
-    .replace(/\s*(kg|lbs?)$/i, '')
-    .replace(',', '.');
-  if (!/^\d+(\.\d+)?$/.test(text)) {
+export function parseWeight(raw, unit = 'kg') {
+  const text = String(raw ?? '').trim();
+  const suffix = text.match(/\s*(kg|lbs?)$/i)?.[1]?.toLowerCase();
+  if (suffix && suffix.replace('lbs', 'lb') !== unit) {
     return null;
   }
-  return Math.round(Number(text) * 100) / 100;
+  const number = text.replace(/\s*(kg|lbs?)$/i, '').replace(',', '.');
+  if (!/^\d+(\.\d+)?$/.test(number)) {
+    return null;
+  }
+  return Math.round(Number(number) * 100) / 100;
 }
 
 /**
  * A date typed or passed by a scene: "2026-10-22", "22/10/2026", or empty for
- * now. A day only is taken at noon (local), so the weigh-in stays on that day
- * whatever the time zone of the wger server.
+ * now. Today is now; another day is taken at noon (local), so the weigh-in
+ * stays on that day whatever the time zone of the wger server.
  * @returns {number|null} ms, null when not understood
  */
 export function parseDay(raw, now) {
@@ -116,7 +127,7 @@ export function parseDay(raw, now) {
   if (date.getMonth() !== month - 1 || date.getDate() !== day) {
     return null;
   }
-  return date.getTime();
+  return startOfDay(date.getTime()) === startOfDay(now) ? now : date.getTime();
 }
 
 const LOCALES = { en: 'en-GB', fr: 'fr-FR', de: 'de-DE', es: 'es-ES' };

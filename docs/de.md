@@ -47,7 +47,7 @@ Das Widget **Gewicht und Training** zeigt das Gewicht und seine Änderung in 7 T
 
 ## Szenen-Auslöser
 
-- **Neue Wägung**: Eine neuere Wägung als die letzte bekannte erscheint in wger (App, Website, Waage oder die Szenen-Aktion unten). Weitergegebene Informationen: Gewicht, Einheit, Änderung in 7 Tagen, BMI, Datum.
+- **Neue Wägung**: Eine neuere Wägung als die letzte bekannte erscheint in wger (App, Website, anderes Werkzeug; nicht die Wägungen der Szenen-Aktion unten, die ihre eigenen Ergebnisse liefert). Weitergegebene Informationen: Gewicht, Einheit, Änderung in 7 Tagen, BMI, Datum.
 - **Training erfasst**: Ein neueres Training als das letzte bekannte erscheint in wger. Weitergegebene Informationen: Notizen oder Routine, Datum, Dauer, Trainings diese Woche.
 - **Länger kein Training**: kein Training seit 2, 3, 5, 7 oder 14 Tagen (nach Wahl). Einmal pro Schwelle, bis zum nächsten Training. Weitergegebene Informationen: Tage seit dem letzten Training, sein Datum.
 
