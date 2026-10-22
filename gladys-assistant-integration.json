@@ -1,177 +1,801 @@
 {
   "manifest_version": 1,
   "type": "device",
-  "name": "Demo Devices Template",
+  "name": "wger",
   "description": {
-    "en": "Starter template showing sensors, a switch, a dimmable light and a smart plug.",
-    "fr": "Template de démarrage : capteurs, interrupteur, lampe variable et prise connectée."
+    "en": "wger in Gladys: weight and trend, workouts of the week, weigh-ins added from a scene.",
+    "fr": "wger dans Gladys : poids et tendance, séances de la semaine, pesées ajoutées depuis une scène.",
+    "de": "wger in Gladys: Gewicht und Trend, Trainings der Woche, Wägungen per Szene hinzufügen.",
+    "es": "wger en Gladys: peso y tendencia, sesiones de la semana, pesajes añadidos desde una escena."
   },
   "version": "1.0.0",
-  "docker_image": "ghcr.io/gladysassistant/integration-template-js:1.0.0",
+  "docker_image": "ghcr.io/guim31/gladys-wger:1.0.0",
   "gladys_version": ">=5.1.0",
-  "cover_image": "https://raw.githubusercontent.com/GladysAssistant/integration-template-js/master/cover.png",
-  "categories": ["lighting", "security", "environment"],
+  "cover_image": "https://raw.githubusercontent.com/guim31/gladys-wger/main/cover.png",
+  "categories": ["services"],
   "transports": ["local", "cloud"],
   "config_schema": [
     {
       "key": "intro",
       "type": "section",
-      "label": { "en": "Getting started", "fr": "Pour commencer" },
+      "label": {
+        "en": "How it works",
+        "fr": "Fonctionnement",
+        "de": "So funktioniert es",
+        "es": "Funcionamiento"
+      },
       "description": {
-        "en": "The demo weather station reads real data from the free Open-Meteo API: pick the coordinates to observe. No account, no API key.",
-        "fr": "La station météo de démonstration lit de vraies données via l'API gratuite Open-Meteo : choisissez les coordonnées à observer. Pas de compte, pas de clé d'API."
+        "en": "Gladys reads your wger account (wger.de or your own server) with its API key: weight, workouts, calories. One device in the Discovery tab. Health data: no history by default, never in the logs.",
+        "fr": "Gladys lit votre compte wger (wger.de ou votre serveur) avec sa clé API : poids, séances, calories. Un appareil dans l'onglet Découverte. Données de santé : pas d'historique par défaut, rien dans les logs.",
+        "de": "Gladys liest dein wger-Konto (wger.de oder dein eigener Server) mit seinem API-Schlüssel: Gewicht, Trainings, Kalorien. Ein Gerät im Tab „Entdecken“. Gesundheitsdaten: standardmäßig ohne Verlauf, nie in den Protokollen.",
+        "es": "Gladys lee su cuenta wger (wger.de o su propio servidor) con su clave API: peso, sesiones, calorías. Un dispositivo en la pestaña Descubrir. Datos de salud: sin historial por defecto, nunca en los registros."
       },
       "links": [
         {
-          "url": "https://open-meteo.com/en/docs",
-          "label": { "en": "Open-Meteo documentation", "fr": "Documentation Open-Meteo" }
+          "url": "https://github.com/guim31/gladys-wger/blob/main/docs/en.md",
+          "label": {
+            "en": "Setup guide",
+            "fr": "Guide d'installation",
+            "de": "Einrichtungsanleitung",
+            "es": "Guía de instalación"
+          }
+        },
+        {
+          "url": "https://wger.de/en/user/api-key",
+          "label": {
+            "en": "API key on wger.de",
+            "fr": "Clé API sur wger.de",
+            "de": "API-Schlüssel auf wger.de",
+            "es": "Clave API en wger.de"
+          }
         }
       ]
     },
     {
-      "key": "latitude",
-      "type": "number",
-      "label": { "en": "Latitude", "fr": "Latitude" },
-      "description": {
-        "en": "Latitude used for the demo weather sensor.",
-        "fr": "Latitude utilisée par le capteur météo de démonstration."
+      "key": "url",
+      "type": "string",
+      "label": {
+        "en": "wger address",
+        "fr": "Adresse de wger",
+        "de": "wger-Adresse",
+        "es": "Dirección de wger"
       },
-      "placeholder": { "en": "e.g. 48.8566", "fr": "ex. 48.8566" },
+      "description": {
+        "en": "https://wger.de, or the address of your own server.",
+        "fr": "https://wger.de, ou l'adresse de votre propre serveur.",
+        "de": "https://wger.de oder die Adresse deines eigenen Servers.",
+        "es": "https://wger.de, o la dirección de su propio servidor."
+      },
+      "placeholder": {
+        "en": "e.g. https://wger.de",
+        "fr": "ex. https://wger.de",
+        "de": "z. B. https://wger.de",
+        "es": "p. ej. https://wger.de"
+      },
       "required": true,
-      "default": 48.8566,
-      "min": -90,
-      "max": 90
+      "default": "https://wger.de"
     },
     {
-      "key": "longitude",
-      "type": "number",
-      "label": { "en": "Longitude", "fr": "Longitude" },
-      "description": {
-        "en": "Longitude used for the demo weather sensor.",
-        "fr": "Longitude utilisée par le capteur météo de démonstration."
+      "key": "api_key",
+      "type": "secret",
+      "label": {
+        "en": "API key",
+        "fr": "Clé API",
+        "de": "API-Schlüssel",
+        "es": "Clave API"
       },
-      "placeholder": { "en": "e.g. 2.3522", "fr": "ex. 2.3522" },
-      "required": true,
-      "default": 2.3522,
-      "min": -180,
-      "max": 180
+      "description": {
+        "en": "In wger: user menu, API key (Generate a new key).",
+        "fr": "Dans wger : menu utilisateur, Clé API (générer une nouvelle clé).",
+        "de": "In wger: Benutzermenü, API-Schlüssel (neuen Schlüssel erzeugen).",
+        "es": "En wger: menú de usuario, Clave API (generar una nueva clave)."
+      },
+      "required": true
     },
     {
-      "key": "unit",
+      "key": "poll_interval",
       "type": "select",
-      "label": { "en": "Temperature unit", "fr": "Unité de température" },
-      "required": false,
-      "default": "celsius",
+      "label": {
+        "en": "Refresh interval",
+        "fr": "Intervalle de rafraîchissement",
+        "de": "Aktualisierungsintervall",
+        "es": "Intervalo de actualización"
+      },
+      "description": {
+        "en": "How often wger is read. A weigh-in added from a scene is read at once.",
+        "fr": "À quelle fréquence wger est lu. Une pesée ajoutée par une scène est relue tout de suite.",
+        "de": "Wie oft wger gelesen wird. Eine per Szene hinzugefügte Wägung wird sofort gelesen.",
+        "es": "Con qué frecuencia se lee wger. Un pesaje añadido desde una escena se lee al momento."
+      },
+      "required": true,
+      "default": "30",
       "options": [
-        { "value": "celsius", "label": { "en": "Celsius", "fr": "Celsius" } },
-        { "value": "fahrenheit", "label": { "en": "Fahrenheit", "fr": "Fahrenheit" } }
+        {
+          "value": "15",
+          "label": {
+            "en": "15 minutes",
+            "fr": "15 minutes",
+            "de": "15 Minuten",
+            "es": "15 minutos"
+          }
+        },
+        {
+          "value": "30",
+          "label": {
+            "en": "30 minutes",
+            "fr": "30 minutes",
+            "de": "30 Minuten",
+            "es": "30 minutos"
+          }
+        },
+        {
+          "value": "60",
+          "label": {
+            "en": "1 hour",
+            "fr": "1 heure",
+            "de": "1 Stunde",
+            "es": "1 hora"
+          }
+        }
       ]
     },
     {
-      "key": "poll_frequency",
-      "type": "number",
-      "label": { "en": "Refresh interval (s)", "fr": "Intervalle de rafraîchissement (s)" },
-      "description": {
-        "en": "How often sensors are polled, in seconds (one minute minimum).",
-        "fr": "Fréquence d'interrogation des capteurs, en secondes (une minute minimum)."
+      "key": "language",
+      "type": "select",
+      "label": {
+        "en": "Language of the names",
+        "fr": "Langue des noms",
+        "de": "Sprache der Namen",
+        "es": "Idioma de los nombres"
       },
-      "required": false,
-      "default": 300,
-      "min": 60,
-      "max": 3600
-    }
-  ],
-  "actions": [
-    {
-      "key": "test_weather",
-      "label": { "en": "Test the weather provider", "fr": "Tester le fournisseur météo" },
-      "timeout_seconds": 30
-    },
-    {
-      "key": "identify",
-      "label": { "en": "Identify a device", "fr": "Identifier un appareil" },
-      "fields": [
+      "description": {
+        "en": "Language of the feature names (set when the device is added) and of the texts sent to scenes.",
+        "fr": "Langue des noms de fonctionnalités (figés à l'ajout de l'appareil) et des textes envoyés aux scènes.",
+        "de": "Sprache der Funktionsnamen (beim Hinzufügen des Geräts festgelegt) und der Texte für Szenen.",
+        "es": "Idioma de los nombres de funciones (fijados al añadir el dispositivo) y de los textos enviados a las escenas."
+      },
+      "default": "fr",
+      "required": true,
+      "options": [
         {
-          "key": "device",
-          "type": "select",
-          "source": "devices",
-          "label": { "en": "Device", "fr": "Appareil" },
-          "required": true
+          "value": "en",
+          "label": {
+            "en": "English",
+            "fr": "Anglais",
+            "de": "Englisch",
+            "es": "Inglés"
+          }
+        },
+        {
+          "value": "fr",
+          "label": {
+            "en": "French",
+            "fr": "Français",
+            "de": "Französisch",
+            "es": "Francés"
+          }
+        },
+        {
+          "value": "de",
+          "label": {
+            "en": "German",
+            "fr": "Allemand",
+            "de": "Deutsch",
+            "es": "Alemán"
+          }
+        },
+        {
+          "value": "es",
+          "label": {
+            "en": "Spanish",
+            "fr": "Espagnol",
+            "de": "Spanisch",
+            "es": "Español"
+          }
         }
       ]
     }
   ],
   "scene_triggers": [
     {
-      "key": "motion_detected",
-      "label": { "en": "Motion detected", "fr": "Mouvement détecté" },
+      "key": "weight_added",
+      "label": {
+        "en": "New weigh-in",
+        "fr": "Nouvelle pesée",
+        "de": "Neue Wägung",
+        "es": "Nuevo pesaje"
+      },
       "description": {
-        "en": "A demo motion sensor saw a person or an animal move.",
-        "fr": "Un détecteur de démonstration a vu bouger une personne ou un animal."
+        "en": "A weigh-in newer than the last one known appears in wger (app, website, scale or a scene). Seen at the next reading.",
+        "fr": "Une pesée plus récente que la dernière connue apparaît dans wger (appli, site, balance ou scène). Vue à la lecture suivante.",
+        "de": "Eine neuere Wägung als die letzte bekannte erscheint in wger (App, Website, Waage oder Szene). Bei der nächsten Abfrage erkannt.",
+        "es": "Aparece en wger un pesaje más reciente que el último conocido (app, web, báscula o escena). Detectado en la siguiente lectura."
       },
       "fields": [
         {
           "key": "device",
           "type": "select",
           "source": "devices",
-          "label": { "en": "Sensor", "fr": "Détecteur" }
+          "required": false,
+          "label": {
+            "en": "Device (empty: any)",
+            "fr": "Appareil (vide : tous)",
+            "de": "Gerät (leer: alle)",
+            "es": "Dispositivo (vacío: todos)"
+          }
+        }
+      ],
+      "variables": [
+        {
+          "key": "device_name",
+          "type": "string",
+          "label": {
+            "en": "Device",
+            "fr": "Appareil",
+            "de": "Gerät",
+            "es": "Dispositivo"
+          }
         },
         {
-          "key": "target",
-          "type": "multi_select",
-          "label": { "en": "What moved", "fr": "Ce qui a bougé" },
+          "key": "weight",
+          "type": "number",
+          "label": {
+            "en": "Weight",
+            "fr": "Poids",
+            "de": "Gewicht",
+            "es": "Peso"
+          }
+        },
+        {
+          "key": "unit",
+          "type": "string",
+          "label": {
+            "en": "Unit (kg or lb)",
+            "fr": "Unité (kg ou lb)",
+            "de": "Einheit (kg oder lb)",
+            "es": "Unidad (kg o lb)"
+          }
+        },
+        {
+          "key": "change_7d",
+          "type": "number",
+          "label": {
+            "en": "Change over 7 days",
+            "fr": "Variation sur 7 jours",
+            "de": "Änderung in 7 Tagen",
+            "es": "Variación en 7 días"
+          }
+        },
+        {
+          "key": "bmi",
+          "type": "number",
+          "label": {
+            "en": "BMI (0 if unknown)",
+            "fr": "IMC (0 si inconnu)",
+            "de": "BMI (0 wenn unbekannt)",
+            "es": "IMC (0 si se desconoce)"
+          }
+        },
+        {
+          "key": "date",
+          "type": "string",
+          "label": {
+            "en": "Date (YYYY-MM-DD)",
+            "fr": "Date (AAAA-MM-JJ)",
+            "de": "Datum (JJJJ-MM-TT)",
+            "es": "Fecha (AAAA-MM-DD)"
+          }
+        }
+      ]
+    },
+    {
+      "key": "workout_logged",
+      "label": {
+        "en": "Workout logged",
+        "fr": "Séance enregistrée",
+        "de": "Training erfasst",
+        "es": "Sesión registrada"
+      },
+      "description": {
+        "en": "A workout session newer than the last one known appears in wger. Seen at the next reading.",
+        "fr": "Une séance plus récente que la dernière connue apparaît dans wger. Vue à la lecture suivante.",
+        "de": "Ein neueres Training als das letzte bekannte erscheint in wger. Bei der nächsten Abfrage erkannt.",
+        "es": "Aparece en wger una sesión más reciente que la última conocida. Detectada en la siguiente lectura."
+      },
+      "fields": [
+        {
+          "key": "device",
+          "type": "select",
+          "source": "devices",
+          "required": false,
+          "label": {
+            "en": "Device (empty: any)",
+            "fr": "Appareil (vide : tous)",
+            "de": "Gerät (leer: alle)",
+            "es": "Dispositivo (vacío: todos)"
+          }
+        }
+      ],
+      "variables": [
+        {
+          "key": "device_name",
+          "type": "string",
+          "label": {
+            "en": "Device",
+            "fr": "Appareil",
+            "de": "Gerät",
+            "es": "Dispositivo"
+          }
+        },
+        {
+          "key": "notes",
+          "type": "string",
+          "label": {
+            "en": "Notes or routine",
+            "fr": "Notes ou routine",
+            "de": "Notizen oder Routine",
+            "es": "Notas o rutina"
+          }
+        },
+        {
+          "key": "date",
+          "type": "string",
+          "label": {
+            "en": "Date (YYYY-MM-DD)",
+            "fr": "Date (AAAA-MM-JJ)",
+            "de": "Datum (JJJJ-MM-TT)",
+            "es": "Fecha (AAAA-MM-DD)"
+          }
+        },
+        {
+          "key": "duration_minutes",
+          "type": "number",
+          "label": {
+            "en": "Duration (minutes, 0 if unknown)",
+            "fr": "Durée (minutes, 0 si inconnue)",
+            "de": "Dauer (Minuten, 0 wenn unbekannt)",
+            "es": "Duración (minutos, 0 si se desconoce)"
+          }
+        },
+        {
+          "key": "workouts_week",
+          "type": "number",
+          "label": {
+            "en": "Workouts this week",
+            "fr": "Séances cette semaine",
+            "de": "Trainings diese Woche",
+            "es": "Sesiones esta semana"
+          }
+        }
+      ]
+    },
+    {
+      "key": "no_workout",
+      "label": {
+        "en": "No workout for a while",
+        "fr": "Aucune séance depuis un moment",
+        "de": "Länger kein Training",
+        "es": "Ninguna sesión desde hace tiempo"
+      },
+      "description": {
+        "en": "No workout session for the chosen number of days. Once per threshold, until the next workout.",
+        "fr": "Aucune séance depuis le nombre de jours choisi. Une fois par seuil, jusqu'à la séance suivante.",
+        "de": "Kein Training seit der gewählten Anzahl Tage. Einmal pro Schwelle, bis zum nächsten Training.",
+        "es": "Ninguna sesión durante el número de días elegido. Una vez por umbral, hasta la siguiente sesión."
+      },
+      "fields": [
+        {
+          "key": "device",
+          "type": "select",
+          "source": "devices",
+          "required": false,
+          "label": {
+            "en": "Device (empty: any)",
+            "fr": "Appareil (vide : tous)",
+            "de": "Gerät (leer: alle)",
+            "es": "Dispositivo (vacío: todos)"
+          }
+        },
+        {
+          "key": "days",
+          "type": "select",
+          "required": true,
+          "label": {
+            "en": "No workout for",
+            "fr": "Sans séance depuis",
+            "de": "Kein Training seit",
+            "es": "Sin sesión desde hace"
+          },
           "options": [
-            { "value": "person", "label": { "en": "Person", "fr": "Personne" } },
-            { "value": "animal", "label": { "en": "Animal", "fr": "Animal" } }
+            {
+              "value": "2",
+              "label": {
+                "en": "2 days",
+                "fr": "2 jours",
+                "de": "2 Tagen",
+                "es": "2 días"
+              }
+            },
+            {
+              "value": "3",
+              "label": {
+                "en": "3 days",
+                "fr": "3 jours",
+                "de": "3 Tagen",
+                "es": "3 días"
+              }
+            },
+            {
+              "value": "5",
+              "label": {
+                "en": "5 days",
+                "fr": "5 jours",
+                "de": "5 Tagen",
+                "es": "5 días"
+              }
+            },
+            {
+              "value": "7",
+              "label": {
+                "en": "7 days",
+                "fr": "7 jours",
+                "de": "7 Tagen",
+                "es": "7 días"
+              }
+            },
+            {
+              "value": "14",
+              "label": {
+                "en": "14 days",
+                "fr": "14 jours",
+                "de": "14 Tagen",
+                "es": "14 días"
+              }
+            }
           ]
         }
       ],
       "variables": [
         {
-          "key": "target",
+          "key": "device_name",
           "type": "string",
-          "label": { "en": "What moved", "fr": "Ce qui a bougé" }
+          "label": {
+            "en": "Device",
+            "fr": "Appareil",
+            "de": "Gerät",
+            "es": "Dispositivo"
+          }
+        },
+        {
+          "key": "days_since_workout",
+          "type": "number",
+          "label": {
+            "en": "Days since the last workout",
+            "fr": "Jours depuis la dernière séance",
+            "de": "Tage seit dem letzten Training",
+            "es": "Días desde la última sesión"
+          }
+        },
+        {
+          "key": "last_workout_date",
+          "type": "string",
+          "label": {
+            "en": "Last workout (YYYY-MM-DD)",
+            "fr": "Dernière séance (AAAA-MM-JJ)",
+            "de": "Letztes Training (JJJJ-MM-TT)",
+            "es": "Última sesión (AAAA-MM-DD)"
+          }
         }
       ]
     }
   ],
   "scene_actions": [
     {
-      "key": "identify_device",
-      "label": { "en": "Identify a device", "fr": "Identifier un appareil" },
-      "description": {
-        "en": "Make a device signal itself (the demo light blinks).",
-        "fr": "Fait se signaler un appareil (la lampe de démonstration clignote)."
+      "key": "add_weight",
+      "label": {
+        "en": "Add a weigh-in",
+        "fr": "Ajouter une pesée",
+        "de": "Wägung hinzufügen",
+        "es": "Añadir un pesaje"
       },
-      "timeout_seconds": 15,
+      "description": {
+        "en": "Adds a weight to wger, e.g. from a connected scale. Refuses implausible values.",
+        "fr": "Ajoute un poids dans wger, par exemple d'une balance connectée. Refuse les valeurs aberrantes.",
+        "de": "Fügt in wger ein Gewicht hinzu, z. B. von einer vernetzten Waage. Lehnt unplausible Werte ab.",
+        "es": "Añade un peso en wger, p. ej. de una báscula conectada. Rechaza los valores aberrantes."
+      },
+      "timeout_seconds": 30,
       "fields": [
         {
-          "key": "device",
-          "type": "select",
-          "source": "devices",
-          "label": { "en": "Device", "fr": "Appareil" },
-          "required": true
+          "key": "weight",
+          "type": "string",
+          "required": true,
+          "label": {
+            "en": "Weight (unit of the wger profile)",
+            "fr": "Poids (unité du profil wger)",
+            "de": "Gewicht (Einheit des wger-Profils)",
+            "es": "Peso (unidad del perfil wger)"
+          },
+          "description": {
+            "en": "A number like 79.8, or a scene value, e.g. the weight of your scale.",
+            "fr": "Un nombre comme 79,8, ou une valeur de la scène, ex. le poids de votre balance.",
+            "de": "Eine Zahl wie 79,8 oder ein Wert der Szene, z. B. das Gewicht deiner Waage.",
+            "es": "Un número como 79,8, o un valor de la escena, p. ej. el peso de su báscula."
+          },
+          "placeholder": {
+            "en": "e.g. 79.8",
+            "fr": "ex. 79,8",
+            "de": "z. B. 79,8",
+            "es": "p. ej. 79,8"
+          }
+        },
+        {
+          "key": "date",
+          "type": "string",
+          "required": false,
+          "label": {
+            "en": "Date (empty: now)",
+            "fr": "Date (vide : maintenant)",
+            "de": "Datum (leer: jetzt)",
+            "es": "Fecha (vacía: ahora)"
+          },
+          "placeholder": {
+            "en": "e.g. 2026-10-22",
+            "fr": "ex. 2026-10-22",
+            "de": "z. B. 2026-10-22",
+            "es": "p. ej. 2026-10-22"
+          }
+        },
+        {
+          "key": "check_change",
+          "type": "boolean",
+          "required": false,
+          "default": true,
+          "label": {
+            "en": "Refuse more than 10 % from the last weigh-in",
+            "fr": "Refuser plus de 10 % d'écart avec la dernière pesée",
+            "de": "Über 10 % Abweichung zur letzten Wägung ablehnen",
+            "es": "Rechazar más de un 10 % de diferencia con el último pesaje"
+          }
         }
       ],
       "outputs": [
         {
-          "key": "signalled",
+          "key": "added",
           "type": "boolean",
-          "label": { "en": "Device signalled", "fr": "Appareil signalé" }
+          "label": {
+            "en": "Added (false: already there)",
+            "fr": "Ajoutée (faux : déjà présente)",
+            "de": "Hinzugefügt (falsch: schon vorhanden)",
+            "es": "Añadido (falso: ya existía)"
+          }
+        },
+        {
+          "key": "weight",
+          "type": "number",
+          "label": {
+            "en": "Weight",
+            "fr": "Poids",
+            "de": "Gewicht",
+            "es": "Peso"
+          }
+        },
+        {
+          "key": "unit",
+          "type": "string",
+          "label": {
+            "en": "Unit (kg or lb)",
+            "fr": "Unité (kg ou lb)",
+            "de": "Einheit (kg oder lb)",
+            "es": "Unidad (kg o lb)"
+          }
+        },
+        {
+          "key": "date",
+          "type": "string",
+          "label": {
+            "en": "Date (YYYY-MM-DD)",
+            "fr": "Date (AAAA-MM-JJ)",
+            "de": "Datum (JJJJ-MM-TT)",
+            "es": "Fecha (AAAA-MM-DD)"
+          }
+        },
+        {
+          "key": "change_7d",
+          "type": "number",
+          "label": {
+            "en": "Change over 7 days",
+            "fr": "Variation sur 7 jours",
+            "de": "Änderung in 7 Tagen",
+            "es": "Variación en 7 días"
+          }
+        },
+        {
+          "key": "message",
+          "type": "string",
+          "label": {
+            "en": "Message",
+            "fr": "Message",
+            "de": "Nachricht",
+            "es": "Mensaje"
+          }
+        }
+      ]
+    },
+    {
+      "key": "get_week_summary",
+      "label": {
+        "en": "Read the week summary",
+        "fr": "Lire le bilan de la semaine",
+        "de": "Wochenbilanz lesen",
+        "es": "Leer el resumen de la semana"
+      },
+      "description": {
+        "en": "Reads wger and gives the weight, its trend and the workouts of the week to the next actions (e.g. a message).",
+        "fr": "Lit wger et donne le poids, sa tendance et les séances de la semaine aux actions suivantes (ex. un message).",
+        "de": "Liest wger und gibt Gewicht, Trend und Trainings der Woche an die nächsten Aktionen weiter (z. B. eine Nachricht).",
+        "es": "Lee wger y pasa el peso, su tendencia y las sesiones de la semana a las acciones siguientes (p. ej. un mensaje)."
+      },
+      "timeout_seconds": 60,
+      "outputs": [
+        {
+          "key": "weight",
+          "type": "number",
+          "label": {
+            "en": "Weight",
+            "fr": "Poids",
+            "de": "Gewicht",
+            "es": "Peso"
+          }
+        },
+        {
+          "key": "unit",
+          "type": "string",
+          "label": {
+            "en": "Unit (kg or lb)",
+            "fr": "Unité (kg ou lb)",
+            "de": "Einheit (kg oder lb)",
+            "es": "Unidad (kg o lb)"
+          }
+        },
+        {
+          "key": "weight_change_7d",
+          "type": "number",
+          "label": {
+            "en": "Change over 7 days",
+            "fr": "Variation sur 7 jours",
+            "de": "Änderung in 7 Tagen",
+            "es": "Variación en 7 días"
+          }
+        },
+        {
+          "key": "weight_change_30d",
+          "type": "number",
+          "label": {
+            "en": "Change over 30 days",
+            "fr": "Variation sur 30 jours",
+            "de": "Änderung in 30 Tagen",
+            "es": "Variación en 30 días"
+          }
+        },
+        {
+          "key": "bmi",
+          "type": "number",
+          "label": {
+            "en": "BMI (0 if unknown)",
+            "fr": "IMC (0 si inconnu)",
+            "de": "BMI (0 wenn unbekannt)",
+            "es": "IMC (0 si se desconoce)"
+          }
+        },
+        {
+          "key": "days_since_weighing",
+          "type": "number",
+          "label": {
+            "en": "Days since the last weigh-in",
+            "fr": "Jours depuis la dernière pesée",
+            "de": "Tage seit der letzten Wägung",
+            "es": "Días desde el último pesaje"
+          }
+        },
+        {
+          "key": "workouts_week",
+          "type": "number",
+          "label": {
+            "en": "Workouts this week",
+            "fr": "Séances cette semaine",
+            "de": "Trainings diese Woche",
+            "es": "Sesiones esta semana"
+          }
+        },
+        {
+          "key": "days_since_workout",
+          "type": "number",
+          "label": {
+            "en": "Days since the last workout",
+            "fr": "Jours depuis la dernière séance",
+            "de": "Tage seit dem letzten Training",
+            "es": "Días desde la última sesión"
+          }
+        },
+        {
+          "key": "last_workout_date",
+          "type": "string",
+          "label": {
+            "en": "Last workout (YYYY-MM-DD)",
+            "fr": "Dernière séance (AAAA-MM-JJ)",
+            "de": "Letztes Training (JJJJ-MM-TT)",
+            "es": "Última sesión (AAAA-MM-DD)"
+          }
+        },
+        {
+          "key": "last_workout",
+          "type": "string",
+          "label": {
+            "en": "Last workout (notes or routine)",
+            "fr": "Dernière séance (notes ou routine)",
+            "de": "Letztes Training (Notizen oder Routine)",
+            "es": "Última sesión (notas o rutina)"
+          }
+        },
+        {
+          "key": "calories_today",
+          "type": "number",
+          "label": {
+            "en": "Calories today (kcal)",
+            "fr": "Calories du jour (kcal)",
+            "de": "Kalorien heute (kcal)",
+            "es": "Calorías de hoy (kcal)"
+          }
+        },
+        {
+          "key": "sentence",
+          "type": "string",
+          "label": {
+            "en": "Sentence",
+            "fr": "Phrase",
+            "de": "Satz",
+            "es": "Frase"
+          }
         }
       ]
     }
   ],
   "widgets": [
     {
-      "key": "demo_status",
-      "label": { "en": "Demo status", "fr": "État de la démo" },
+      "key": "summary",
+      "label": {
+        "en": "Weight and workouts",
+        "fr": "Poids et séances",
+        "de": "Gewicht und Training",
+        "es": "Peso y sesiones"
+      },
       "description": {
-        "en": "Live temperature and plug power, plug connection and observed location.",
-        "fr": "Température et puissance en direct, connexion de la prise, position observée."
+        "en": "Weight, its 7-day change, workouts of the week, last workout and the weight curve.",
+        "fr": "Poids, variation sur 7 jours, séances de la semaine, dernière séance et courbe du poids.",
+        "de": "Gewicht, Änderung in 7 Tagen, Trainings der Woche, letztes Training und Gewichtskurve.",
+        "es": "Peso, variación en 7 días, sesiones de la semana, última sesión y curva del peso."
       },
       "icon": "activity",
-      "action_timeout_seconds": 15
+      "action_timeout_seconds": 30
+    }
+  ],
+  "actions": [
+    {
+      "key": "test_connection",
+      "label": {
+        "en": "Test the connection",
+        "fr": "Tester la connexion",
+        "de": "Verbindung testen",
+        "es": "Probar la conexión"
+      },
+      "description": {
+        "en": "Reads wger now and tells the account it is connected to.",
+        "fr": "Lit wger tout de suite et indique le compte connecté.",
+        "de": "Liest wger sofort und nennt das verbundene Konto.",
+        "es": "Lee wger ahora e indica la cuenta conectada."
+      },
+      "timeout_seconds": 60
     }
   ]
 }

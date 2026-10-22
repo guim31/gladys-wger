@@ -1,0 +1,34 @@
+{
+  "count": 3,
+  "next": null,
+  "previous": null,
+  "results": [
+    {
+      "id": "01a16347-5050-71ae-9d9c-4553c7714df0",
+      "routine": null,
+      "day": null,
+      "notes": "Course 5 km",
+      "impression": "3",
+      "datetime_start": "2026-10-22T07:30:00+02:00",
+      "datetime_end": null
+    },
+    {
+      "id": "01a16347-4967-7e87-8f13-19602ebba7cb",
+      "routine": 1,
+      "day": null,
+      "notes": "Jambes, bonne forme",
+      "impression": "3",
+      "datetime_start": "2026-10-20T18:00:00+02:00",
+      "datetime_end": "2026-10-20T19:05:00+02:00"
+    },
+    {
+      "id": "01a16347-4d29-7230-90c3-825a2b0e7102",
+      "routine": 1,
+      "day": null,
+      "notes": "",
+      "impression": "2",
+      "datetime_start": "2026-10-14T18:00:00+02:00",
+      "datetime_end": "2026-10-14T18:50:00+02:00"
+    }
+  ]
+}

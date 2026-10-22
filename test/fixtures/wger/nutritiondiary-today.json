@@ -1,0 +1,16 @@
+{
+  "count": 1,
+  "next": null,
+  "previous": null,
+  "results": [
+    {
+      "id": "01a16347-f4c9-765d-9bb9-6e24723acdf8",
+      "plan": "01a16347-1617-7038-b83e-06b6b1dc5648",
+      "meal": null,
+      "ingredient": 1,
+      "weight_unit": null,
+      "datetime": "2026-10-22T08:00:00+02:00",
+      "amount": "80.00"
+    }
+  ]
+}

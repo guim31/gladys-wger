@@ -1,67 +1,82 @@
-# Template de démonstration
+# wger
 
-Ceci est la documentation utilisateur de l'intégration. Gladys ré-héberge ce
-fichier et affiche un lien **Documentation** permanent vers lui dans l'écran
-de configuration (dans la langue de l'utilisateur, avec l'anglais en repli) —
-c'est au moment de configurer que l'utilisateur en a le plus besoin. Gardez
-les courtes indications d'accueil dans les blocs `section` du `config_schema`
-du manifest ; mettez ici le pas-à-pas détaillé (captures d'écran, dépannage…).
+[wger](https://wger.de) est un carnet d'entraînement et de suivi du poids libre (AGPL-3.0), utilisé sur wger.de ou auto-hébergé. Cette intégration amène votre compte wger dans Gladys : votre poids et sa tendance, vos séances de la semaine, les calories saisies aujourd'hui, des déclencheurs de scène, et une action de scène qui **ajoute une pesée dans wger** — une balance connectée déjà intégrée à Gladys peut ainsi alimenter wger.
 
-## Ce que vous obtenez
+Testée contre un vrai serveur wger en Docker (wger 2.8, la version de wger.de) : lecture, ajout de pesées, erreurs. Sans lien avec le projet wger.
 
-Six appareils de démonstration apparaissent après l'installation : une
-station météo (vraies données Open-Meteo), un interrupteur, une lampe
-variable, une prise connectée avec mesure de puissance, un détecteur de
-mouvement et une caméra.
+## Prérequis
+
+- Un compte wger, sur [wger.de](https://wger.de) ou sur votre propre serveur (wger 2.6 ou plus récent conseillé ; testé avec la 2.8).
+- Sa **clé API** : dans wger, ouvrez le menu utilisateur, puis **Clé API**, et générez une clé (sur wger.de : <https://wger.de/fr/user/api-key>).
+- Gladys Assistant 5.1 ou plus récent.
 
 ## Configuration
 
-1. Ouvrez l'onglet **Configuration** de l'intégration.
-2. Renseignez la **latitude** et la **longitude** que la station météo de
-   démonstration doit observer (Paris par défaut), et choisissez votre unité
-   de température. L'**intervalle de rafraîchissement** règle la fréquence
-   de lecture de la station météo et de la puissance de la prise : toutes
-   les 5 minutes par défaut, toutes les minutes au plus.
-3. Enregistrez : les appareils apparaissent dans l'onglet **Découverte**,
-   prêts à être ajoutés.
+Dans Gladys, ouvrez **Intégrations → wger**, puis la configuration :
 
-Le réglage **Préférer la connexion locale** pilote la prise de
-démonstration : elle affiche en badge le canal réellement utilisé (local ou
-cloud), avec un point orange quand elle fonctionne en mode dégradé (local
-refusé, bascule cloud).
+- **Adresse de wger** : `https://wger.de`, ou l'adresse de votre propre serveur (ex. `http://192.168.1.20:8000`). Une adresse copiée depuis le navigateur est acceptée.
+- **Clé API** : la clé générée dans wger. Gladys la garde comme un secret, elle n'est jamais écrite dans les logs.
+- **Intervalle de rafraîchissement** : 15 minutes, 30 minutes (par défaut) ou 1 heure. Une pesée ajoutée par une scène est relue tout de suite.
+- **Langue des noms** : langue des noms de fonctionnalités (figés à l'ajout de l'appareil) et des textes envoyés aux scènes.
 
-## Actions
+Le bouton **Tester la connexion** lit wger tout de suite et indique le compte connecté.
 
-- **Tester le fournisseur météo** — effectue une requête en direct vers
-  Open-Meteo et affiche la température et l'humidité actuelles sous le
-  bouton.
-- **Identifier un appareil** — choisissez un de vos appareils dans la liste
-  et il se signale (la lampe de démonstration « clignote » dans les logs).
+## L'appareil
 
-## Scènes
+Un appareil par compte, `wger <nom d'utilisateur>`, proposé dans l'onglet **Découverte**. Ajoutez-le pour obtenir ses fonctionnalités :
 
-L'intégration ajoute ses propres cartes à l'éditeur de scènes (Gladys 5.1
-ou plus récent), dans la catégorie **Intégrations** :
+| Fonctionnalité                                            | Valeur                                                             |
+| --------------------------------------------------------- | ------------------------------------------------------------------ |
+| Poids (kg) / Poids (lb)                                   | la dernière pesée, dans l'unité de votre profil wger               |
+| Variation sur 7 jours (kg) / Variation sur 7 jours (lb)   | la dernière pesée moins celle d'il y a 7 jours, ou d'avant         |
+| Variation sur 30 jours (kg) / Variation sur 30 jours (lb) | la même chose sur 30 jours                                         |
+| IMC                                                       | quand votre taille est renseignée dans votre profil wger           |
+| Jours depuis la dernière pesée                            | 0 le jour même                                                     |
+| Séances cette semaine                                     | les séances depuis lundi                                           |
+| Jours depuis la dernière séance                           | 0 le jour même                                                     |
+| Dernière séance                                           | son jour, puis ses notes ou sa routine                             |
+| Calories du jour (kcal)                                   | les aliments saisis aujourd'hui, si vous avez un plan nutritionnel |
 
-- **Mouvement détecté** (déclencheur) — lance la scène quand un détecteur
-  de démonstration voit bouger quelque chose. Choisissez éventuellement le
-  détecteur et ce qui a bougé (personne, animal) ; laissés vides, toute
-  détection correspond. Les actions suivantes peuvent lire ce qui a bougé
-  avec `{{triggerEvent.data.target}}`.
-- **Identifier un appareil** (action) — fait se signaler l'appareil choisi.
-  Elle indique si l'appareil a pu se signaler, pour que les actions
-  suivantes puissent en dépendre.
+Une variation n'est donnée que si wger a une pesée assez ancienne (au plus deux fois la période avant) : avec une pesée il y a un mois, pas de « variation sur 7 jours ».
 
-## Tableau de bord
+Données de santé : les fonctionnalités ne gardent **aucun historique par défaut** (vous pouvez l'activer fonctionnalité par fonctionnalité dans Gladys), et aucune valeur n'est jamais écrite dans les logs.
 
-Ajoutez le widget **État de la démo** à un tableau de bord : il affiche en
-direct la température de la station météo et la puissance de la prise du
-bureau, la connexion utilisée par la prise (en orange si dégradée) et la
-position observée. Son bouton **Identifier la lampe** fait se signaler la
-lampe de démonstration.
+## Widget
+
+Le widget **Poids et séances** affiche le poids et sa variation sur 7 jours, les séances de la semaine, le jour de la dernière séance, les calories du jour (face à l'objectif du plan nutritionnel), la courbe du poids sur 30 jours, et un bouton **Actualiser**. Il fonctionne même avant l'ajout de l'appareil.
+
+## Déclencheurs de scène
+
+- **Nouvelle pesée** : une pesée plus récente que la dernière connue apparaît dans wger (appli, site, balance, ou l'action de scène ci-dessous). Informations transmises : poids, unité, variation sur 7 jours, IMC, date.
+- **Séance enregistrée** : une séance plus récente que la dernière connue apparaît dans wger. Informations transmises : notes ou routine, date, durée, séances cette semaine.
+- **Aucune séance depuis un moment** : aucune séance depuis 2, 3, 5, 7 ou 14 jours (au choix). Une fois par seuil, jusqu'à la séance suivante. Informations transmises : jours depuis la dernière séance, sa date.
+
+Les déclencheurs sont vus à la lecture suivante de wger (voir l'intervalle de rafraîchissement). La première lecture d'un compte n'annonce rien : seulement ce qui se passe après.
+
+## Actions de scène
+
+- **Ajouter une pesée** : ajoute un poids dans wger. Le poids est un nombre (`79,8` ou `79.8`) ou une valeur de la scène, par exemple le poids d'une balance connectée (insérez-la avec `{{`). La date est maintenant, sauf si vous la donnez (`2026-10-22` ou `22/10/2026`). Refusé, avec une ligne dans les logs de Gladys : ce qui n'est pas un nombre, un poids hors de 20–350 kg (44–770 lb), une date dans le futur et, sauf si vous décochez la case, un poids à plus de 10 % de la dernière pesée des 30 derniers jours (quelqu'un d'autre, ou le chat, sur la balance). Le même poids le même jour n'est pas ajouté deux fois. Résultats : ajoutée, poids, unité, date, variation sur 7 jours, message.
+- **Lire le bilan de la semaine** : lit wger et donne le poids, ses variations, l'IMC, les séances de la semaine, la dernière séance, les calories du jour et une phrase toute faite aux actions suivantes.
+
+## Exemples de scènes
+
+- **La balance alimente wger** : déclencheur « la valeur d'un appareil change » sur le poids de votre balance connectée → action **Ajouter une pesée** avec cette valeur → un message avec le poids et sa variation sur 7 jours, donnés par l'action.
+- **Un coup de pouce sur le canapé** : déclencheur **Aucune séance depuis un moment** (3 jours) → message « Pas de séance depuis 3 jours, un petit footing ? ».
+- **Le bilan du dimanche soir** : déclencheur « chaque dimanche à 20 h » → **Lire le bilan de la semaine** → message avec sa phrase : « Poids 79,8 kg (-0,7 kg en 7 jours) · 2 séances cette semaine, dernière jeu. 22/10 ».
 
 ## Dépannage
 
-L'intégration journalise tout ce qu'elle fait : consultez les logs de
-l'intégration depuis l'interface Gladys (ou `docker logs` sur l'hôte) avec
-`LOG_LEVEL=debug` pour le détail complet.
+- **Accès refusé : vérifiez la clé API** : générez une nouvelle clé dans wger et collez-la de nouveau (avec ou sans le mot « Token »).
+- **wger ne répond pas** : vérifiez l'adresse, et que Gladys joint le serveur (pour un wger auto-hébergé, le port, ex. `:8000` ou `:80`).
+- **L'adresse redirige** : donnez l'adresse en `https://` de votre serveur.
+- **Pas de calories** : la fonctionnalité n'existe qu'avec un plan nutritionnel dans wger ; ce sont les calories des aliments saisis aujourd'hui.
+- **Une pesée a été refusée** : la raison est dans les logs de Gladys ; décochez le contrôle des 10 % si votre poids a vraiment changé autant.
+- Problèmes et idées : <https://github.com/guim31/gladys-wger/issues>.
+
+## Limites
+
+- Un compte wger par intégration. Pour deux personnes, il faut deux comptes wger (et l'installation de l'intégration en suit un).
+- L'unité de poids est celle de votre profil wger ; la changer ajoute de nouvelles fonctionnalités dans l'autre unité (mettez l'appareil à jour depuis l'onglet Découverte).
+- Lecture seule, sauf les pesées ajoutées par l'action de scène : aucune routine, aucun plan nutritionnel n'est modifié.
+- Les calories du jour demandent une requête par aliment saisi la première fois (puis elles sont gardées) : un journal chargé se lit en quelques secondes.
+- Le texte « Dernière séance » donne les notes de la séance, ou le nom de sa routine.
