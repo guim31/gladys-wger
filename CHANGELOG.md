@@ -10,6 +10,8 @@ the notes of the version's GitHub Release.
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-10-22
+
 ### Added
 
 - wger in Gladys: one device per account, from wger.de or a self-hosted
@@ -26,4 +28,5 @@ the notes of the version's GitHub Release.
   workout, calories of the day and the weight curve of the last 30 days.
 - Texts and documentation in English, French, German and Spanish.
 
-[Unreleased]: https://github.com/guim31/gladys-wger/commits/main
+[Unreleased]: https://github.com/guim31/gladys-wger/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/guim31/gladys-wger/releases/tag/v1.0.0
